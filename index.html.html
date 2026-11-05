@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Joue à Le Nombre Secret : 5 niveaux, 50 essais et un maximum de points !">
+<title>Le Nombre Secret — Jeu gratuit</title>
+<style>
+  :root { color-scheme: dark; --bg:#10152b; --panel:#1c2545; --accent:#7c5cff; --cyan:#36d6d0; --text:#f5f7ff; --muted:#b9c2df; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--text); background:radial-gradient(circle at top,#293568 0,#151d3a 42%,#0c1022 100%); display:grid; place-items:center; padding:20px; }
+  .game { width:min(100%,650px); background:rgba(28,37,69,.96); border:1px solid rgba(255,255,255,.12); border-radius:26px; padding:clamp(22px,5vw,42px); box-shadow:0 22px 70px #0008; text-align:center; }
+  .logo { font-size:clamp(2.2rem,8vw,4rem); margin:0; line-height:1.05; }
+  .subtitle { color:var(--muted); margin:12px 0 28px; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:22px 0; }
+  .stat { background:#111a35; border:1px solid #ffffff16; border-radius:15px; padding:12px 8px; }
+  .stat strong { display:block; font-size:1.45rem; color:var(--cyan); }
+  .stat span { color:var(--muted); font-size:.82rem; }
+  .level { color:#c8bcff; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .range { font-size:1.15rem; margin:16px 0; }
+  input { width:min(100%,250px); padding:15px; border-radius:13px; border:2px solid #56618c; background:#0f1731; color:white; font-size:1.2rem; text-align:center; outline:none; }
+  input:focus { border-color:var(--cyan); }
+  button { border:0; border-radius:13px; padding:14px 22px; font-size:1rem; font-weight:800; cursor:pointer; color:white; background:linear-gradient(135deg,var(--accent),#a04cff); box-shadow:0 7px 18px #0003; transition:transform .15s,filter .15s; }
+  button:hover { transform:translateY(-2px); filter:brightness(1.12); }
+  button:focus-visible { outline:3px solid var(--cyan); outline-offset:3px; }
+  button.secondary { background:#344064; }
+  .controls { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:15px; }
+  .message { min-height:56px; display:grid; place-items:center; font-size:1.05rem; font-weight:700; margin:18px 0 6px; }
+  .good { color:#72f0bd; } .hint { color:#ffd479; } .bad { color:#ff929e; }
+  .progress { height:10px; border-radius:99px; background:#0d1530; overflow:hidden; margin:20px 0 6px; }
+  .bar { height:100%; width:0; background:linear-gradient(90deg,var(--cyan),#8c70ff); transition:width .25s; }
+  .hidden { display:none !important; }
+  .big-icon { font-size:4rem; margin:8px 0; }
+  .rules { color:var(--muted); line-height:1.6; font-size:.95rem; }
+  footer { color:#9da9ce; font-size:.8rem; margin-top:24px; }
+  @media(max-width:420px) { .stats { gap:6px; } .stat { padding:10px 4px; } .stat strong { font-size:1.2rem; } .stat span { font-size:.72rem; } }
+</style>
+</head>
+<body>
+<main class="game">
+  <section id="home">
+    <h1 class="logo">🔐 LE NOMBRE<br>SECRET</h1>
+    <p class="subtitle">Trouve le nombre mystère et termine les 5 niveaux !</p>
+    <div class="stats">
+      <div class="stat"><strong>5</strong><span>NIVEAUX</span></div>
+      <div class="stat"><strong>50</strong><span>ESSAIS AU TOTAL</span></div>
+      <div class="stat"><strong>🏆</strong><span>DES POINTS À GAGNER</span></div>
+    </div>
+    <p class="rules">À chaque niveau, trouve un nombre de plus en plus grand.<br>Tu partages tes 50 essais entre les 5 niveaux.</p>
+    <button id="startBtn">▶ JOUER</button>
+  </section>
+
+  <section id="play" class="hidden">
+    <p class="level" id="levelLabel">⭐ NIVEAU 1 / 5</p>
+    <h2 id="instruction">Trouve le nombre secret !</h2>
+    <p class="range" id="rangeText">Entre 1 et 20</p>
+    <div class="stats">
+      <div class="stat"><strong id="triesLeft">50</strong><span>ESSAIS RESTANTS</span></div>
+      <div class="stat"><strong id="score">0</strong><span>POINTS</span></div>
+      <div class="stat"><strong id="levelTries">0</strong><span>ESSAIS DU NIVEAU</span></div>
+    </div>
+    <div class="progress"><div class="bar" id="progressBar"></div></div>
+    <form id="guessForm">
+      <label for="guess" class="rules">Entre ton nombre :</label><br><br>
+      <input id="guess" type="number" min="1" max="20" placeholder="Ton nombre" required inputmode="numeric">
+      <div class="controls"><button type="submit">DEVINER</button></div>
+    </form>
+    <div class="message" id="message" aria-live="polite">Bonne chance ! 🍀</div>
+  </section>
+
+  <section id="end" class="hidden">
+    <div class="big-icon" id="endIcon">🏆</div>
+    <h1 id="endTitle">VICTOIRE !</h1>
+    <p id="endText" class="subtitle">Tu as terminé les 5 niveaux !</p>
+    <div class="stats">
+      <div class="stat"><strong id="finalScore">0</strong><span>POINTS</span></div>
+      <div class="stat"><strong id="finalLevels">5/5</strong><span>NIVEAUX</span></div>
+      <div class="stat"><strong id="finalTries">0</strong><span>ESSAIS UTILISÉS</span></div>
+    </div>
+    <button id="restartBtn">↻ REJOUER</button>
+  </section>
+  <footer>Un petit jeu créé avec Python… puis transformé pour le Web ✨</footer>
+</main>
+<script>
+(() => {
+  const limits = [20, 40, 80, 160, 320];
+  let level = 0, totalLeft = 50, score = 0, used = 0, levelUsed = 0, secret = 0, locked = false;
+
+  const $ = id => document.getElementById(id);
+  const home = $("home"), play = $("play"), end = $("end");
+  function show(section) {
+    home.classList.add("hidden"); play.classList.add("hidden"); end.classList.add("hidden");
+    section.classList.remove("hidden");
+  }
+  function startGame() {
+    level = 0; totalLeft = 50; score = 0; used = 0; levelUsed = 0; locked = false;
+    show(play); startLevel();
+  }
+  function startLevel() {
+    secret = Math.floor(Math.random() * limits[level]) + 1;
+    levelUsed = 0; locked = false;
+    $("levelLabel").textContent = `⭐ NIVEAU ${level + 1} / 5`;
+    $("instruction").textContent = "Trouve le nombre secret !";
+    $("rangeText").textContent = `Entre 1 et ${limits[level]}`;
+    $("guess").min = 1; $("guess").max = limits[level]; $("guess").value = "";
+    $("guess").placeholder = `1 à ${limits[level]}`;
+    $("guess").disabled = false;
+    $("guessForm").querySelector("button").disabled = false;
+    $("message").textContent = "Bonne chance ! 🍀";
+    $("message").className = "message";
+    updateStats();
+    $("guess").focus();
+  }
+  function updateStats() {
+    $("triesLeft").textContent = totalLeft;
+    $("score").textContent = score;
+    $("levelTries").textContent = levelUsed;
+    $("progressBar").style.width = `${(used / 50) * 100}%`;
+  }
+  function finish(won) {
+    show(end);
+    $("endIcon").textContent = won ? "🏆" : "🎮";
+    $("endTitle").textContent = won ? "VICTOIRE !" : "PARTIE TERMINÉE";
+    $("endText").textContent = won ? "Incroyable ! Tu as terminé les 5 niveaux !" : "Tu as utilisé tes 50 essais. Essaie encore !";
+    $("finalScore").textContent = score;
+    $("finalLevels").textContent = `${won ? 5 : level}/${5}`;
+    $("finalTries").textContent = used;
+  }
+  $("guessForm").addEventListener("submit", event => {
+    event.preventDefault();
+    if (locked || totalLeft <= 0) return;
+    const value = Number($("guess").value);
+    if (!Number.isInteger(value) || value < 1 || value > limits[level]) {
+      $("message").textContent = `Entre un nombre entier entre 1 et ${limits[level]}.`;
+      $("message").className = "message hint";
+      return;
+    }
+    totalLeft--; used++; levelUsed++;
+    if (value < secret) {
+      $("message").textContent = "⬆️ C'est plus grand !";
+      $("message").className = "message hint";
+    } else if (value > secret) {
+      $("message").textContent = "⬇️ C'est plus petit !";
+      $("message").className = "message hint";
+    } else {
+      const earned = 100 + Math.max(0, 50 - levelUsed) * 10;
+      score += earned;
+      $("message").textContent = `🎉 Bravo ! +${earned} points !`;
+      $("message").className = "message good";
+      locked = true;
+      updateStats();
+      if (level === 4) {
+        setTimeout(() => finish(true), 1100);
+      } else if (totalLeft === 0) {
+        setTimeout(() => finish(false), 1100);
+      } else {
+        $("guess").disabled = true;
+        $("guessForm").querySelector("button").disabled = true;
+        $("instruction").textContent = `Niveau réussi ! +${earned} points`;
+        const next = document.createElement("button");
+        next.type = "button"; next.textContent = "NIVEAU SUIVANT ➜";
+        next.addEventListener("click", () => { level++; startLevel(); next.remove(); });
+        $("guessForm").appendChild(next);
+      }
+      return;
+    }
+    updateStats();
+    $("guess").value = "";
+    if (totalLeft === 0) {
+      locked = true;
+      $("guess").disabled = true;
+      $("guessForm").querySelector("button").disabled = true;
+      setTimeout(() => finish(false), 900);
+    } else {
+      $("guess").focus();
+    }
+  });
+  $("startBtn").addEventListener("click", startGame);
+  $("restartBtn").addEventListener("click", startGame);
+})();
+</script>
+</body>
+</html>
